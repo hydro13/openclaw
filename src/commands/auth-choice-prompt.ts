@@ -58,12 +58,15 @@ export function resolveExistingAuthLinesForGroup(params: {
 export function buildKeepExistingOption(params: {
   group: AuthChoiceGroup;
   store: AuthProfileStore;
-}): AuthChoiceOption {
+}): AuthChoiceOption | undefined {
   const lines = resolveExistingAuthLinesForGroup(params);
+  if (lines.length === 0) {
+    return undefined;
+  }
   return {
     value: "skip",
-    label: "Keep Existing",
-    hint: lines.length > 0 ? lines.join("\n") : "Use existing auth",
+    label: "Keep existing",
+    hint: lines.join("\n"),
   };
 }
 
@@ -108,9 +111,12 @@ export async function promptAuthChoiceGrouped(params: {
       return group.options[0].value;
     }
 
+    const keepExistingOption = params.includeSkip
+      ? buildKeepExistingOption({ group, store: params.store })
+      : undefined;
     const methodOptions: Array<{ value: string; label: string; hint?: string }> = [
       ...group.options,
-      ...(params.includeSkip ? [buildKeepExistingOption({ group, store: params.store })] : []),
+      ...(keepExistingOption ? [keepExistingOption] : []),
       { value: BACK_VALUE, label: "Back" },
     ];
 
