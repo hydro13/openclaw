@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayBonjourBeacon } from "../../infra/bonjour-discovery.js";
-import { pickBeaconHost, pickGatewayPort } from "./discover.js";
+import { buildGatewayWsUrl, pickBeaconHost, pickGatewayPort } from "./discover.js";
 
 const acquireGatewayLock = vi.fn(async () => ({
   release: vi.fn(async () => {}),
@@ -184,11 +184,7 @@ describe("gateway discover routing helpers", () => {
       port: 18789,
       gatewayTls: true,
     };
-    const host = pickBeaconHost(beacon);
-    const port = pickGatewayPort(beacon);
-    const scheme = beacon.gatewayTls ? "wss" : "ws";
-    const wsUrl = host ? `${scheme}://${host}:${port}` : null;
-    expect(wsUrl).toBe("wss://10.0.0.5:18789");
+    expect(buildGatewayWsUrl(beacon)).toBe("wss://10.0.0.5:18789");
   });
 
   it("builds ws:// URL when gatewayTls is false or undefined", () => {
@@ -199,11 +195,7 @@ describe("gateway discover routing helpers", () => {
         port: 18789,
         gatewayTls,
       };
-      const host = pickBeaconHost(beacon);
-      const port = pickGatewayPort(beacon);
-      const scheme = beacon.gatewayTls ? "wss" : "ws";
-      const wsUrl = host ? `${scheme}://${host}:${port}` : null;
-      expect(wsUrl).toBe("ws://10.0.0.6:18789");
+      expect(buildGatewayWsUrl(beacon)).toBe("ws://10.0.0.6:18789");
     }
   });
 });
