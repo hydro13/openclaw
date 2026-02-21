@@ -17,6 +17,7 @@ import { createReplyPrefixOptions } from "../channels/reply-prefix.js";
 import type { OpenClawConfig } from "../config/config.js";
 import type { ChannelGroupPolicy } from "../config/group-policy.js";
 import { resolveMarkdownTableMode } from "../config/markdown-tables.js";
+import { recordSessionMetaFromInbound, resolveStorePath } from "../config/sessions.js";
 import {
   normalizeTelegramCommandName,
   resolveTelegramCustomCommands,
@@ -592,6 +593,17 @@ export const registerTelegramNativeCommands = ({
             // Originating context for sub-agent announce routing
             OriginatingChannel: "telegram" as const,
             OriginatingTo: `telegram:${chatId}`,
+          });
+
+          const storePath = resolveStorePath(cfg.session?.store, {
+            agentId: route.agentId,
+          });
+          void recordSessionMetaFromInbound({
+            storePath,
+            sessionKey: ctxPayload.SessionKey ?? route.sessionKey,
+            ctx: ctxPayload,
+          }).catch((err) => {
+            runtime.error?.(danger(`telegram slash: failed updating session meta: ${String(err)}`));
           });
 
           const disableBlockStreaming =

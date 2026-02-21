@@ -859,3 +859,21 @@ describe("slack slash commands access groups", () => {
     expectUnauthorizedResponse(respond);
   });
 });
+
+describe("slack slash command session metadata", () => {
+  const { recordSessionMetaFromInboundMock } = getSlackSlashMocks();
+
+  it("calls recordSessionMetaFromInbound after dispatching a slash command", async () => {
+    const harness = createPolicyHarness({ groupPolicy: "open" });
+    await registerAndRunPolicySlash({ harness });
+
+    expect(dispatchMock).toHaveBeenCalledTimes(1);
+    expect(recordSessionMetaFromInboundMock).toHaveBeenCalledTimes(1);
+    const call = recordSessionMetaFromInboundMock.mock.calls[0]?.[0] as {
+      sessionKey?: string;
+      ctx?: { OriginatingChannel?: string };
+    };
+    expect(call.ctx?.OriginatingChannel).toBe("slack");
+    expect(call.sessionKey).toBeDefined();
+  });
+});
